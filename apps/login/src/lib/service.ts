@@ -7,6 +7,7 @@ import { SessionService } from "@zitadel/proto/zitadel/session/v2/session_servic
 import { SettingsService } from "@zitadel/proto/zitadel/settings/v2/settings_service_pb";
 import { UserService } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 import { systemAPIToken } from "./api";
+import { isMultiTenant } from "./deployment";
 import { createServerTransport } from "./zitadel";
 
 type ServiceClass =
@@ -18,20 +19,15 @@ type ServiceClass =
   | typeof SettingsService
   | typeof SAMLService;
 
-export async function createServiceForHost<T extends ServiceClass>(
-  service: T,
-  serviceUrl: string,
-) {
+export async function createServiceForHost<T extends ServiceClass>(service: T, serviceUrl: string) {
   let token;
 
-  // if we are running in a multitenancy context, use the system user token
-  if (
-    process.env.AUDIENCE &&
-    process.env.SYSTEM_USER_ID &&
-    process.env.SYSTEM_USER_PRIVATE_KEY
-  ) {
+  // Determine authentication method based on deployment mode
+  if (isMultiTenant()) {
+    // Multi-tenant: use system user token with JWT
     token = await systemAPIToken();
-  } else if (process.env.ZITADEL_SERVICE_USER_TOKEN) {
+  } else {
+    // Self-hosted: use service user token from env
     token = process.env.ZITADEL_SERVICE_USER_TOKEN;
   }
 

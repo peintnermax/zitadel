@@ -1,29 +1,85 @@
 import { headers } from "next/headers";
+import { isMultiTenant } from "../deployment";
+
+/**
+ * List of trusted hosts that are allowed to be used in URLs (e.g., password reset links).
+ * This prevents host header injection attacks where an attacker could manipulate headers
+ * to redirect users to malicious sites.
+ *
+ * ⚠️ SECURITY: Set TRUSTED_HOSTS env var to enable validation.
+ *
+ * Set TRUSTED_HOSTS env var to:
+ * - Comma-separated list of hosts: "example.com,*.example.com,localhost"
+ * - Undefined/not set: disables validation (relies on reverse proxy security)
+ */
+const TRUSTED_HOSTS = process.env.TRUSTED_HOSTS ? process.env.TRUSTED_HOSTS.split(",").map((h) => h.trim()) : null; // Not set: disable validation (rely on reverse proxy)
+
+/**
+ * Validates that a host is in the trusted hosts list.
+ * Supports exact matches and wildcard subdomains.
+ *
+ * @param host - The host to validate
+ * @returns true if host is trusted or validation is disabled, false otherwise
+ */
+function isTrustedHost(host: string): boolean {
+  // If TRUSTED_HOSTS is null, validation is disabled (set via TRUSTED_HOSTS="")
+  if (TRUSTED_HOSTS === null) {
+    return true;
+  }
+
+  // Direct match
+  if (TRUSTED_HOSTS.includes(host)) {
+    return true;
+  }
+
+  // Check for wildcard subdomain matches (e.g., "*.yourdomain.com")
+  return TRUSTED_HOSTS.some((trustedHost) => {
+    if (trustedHost.startsWith("*.")) {
+      const domain = trustedHost.slice(2); // Remove "*."
+      return host.endsWith(`.${domain}`) || host === domain;
+    }
+    return false;
+  });
+}
 
 /**
  * Gets the original host that the user sees in their browser URL.
  * When using rewrites this function prioritizes forwarded headers that preserve the original host.
  *
- * ⚠️ SERVER-SIDE ONLY: This function can only be used in:
- * - Server Actions (functions with "use server")
- * - Server Components (React components that run on the server)
- * - Route Handlers (API routes)
- * - Middleware
+ * ⚠️ SECURITY: Host validation is disabled by default. Set TRUSTED_HOSTS to enable.
+ * Configure via TRUSTED_HOSTS environment variable:
+ * - Set to comma-separated list: "example.com,*.example.com" (enables validation)
+ * - Leave unset to disable validation (relies on reverse proxy security)
+ *
+ * The function determines which headers to trust based on deployment mode:
+ * - Multi-tenant: Uses x-zitadel-forward-host (custom ZITADEL header)
+ * - Self-hosted: Uses x-forwarded-host → host (standard proxy headers)
  *
  * @returns The host string (e.g., "zitadel.com")
- * @throws Error if no host is found
+ * @throws Error if no host is found or if host is not trusted (when validation enabled)
  */
 export async function getOriginalHost(): Promise<string> {
   const _headers = await headers();
 
-  // Priority order:
-  // 1. x-forwarded-host - Set by proxies/CDNs with the original host
-  // 2. x-original-host - Alternative header sometimes used
-  // 3. host - Fallback to the current host header
-  const host = _headers.get("x-forwarded-host") || _headers.get("x-original-host") || _headers.get("host");
+  let host: string | null;
+
+  // Determine deployment mode and choose appropriate headers
+  if (isMultiTenant()) {
+    // Multi-tenant mode: trust x-zitadel-forward-host (custom header set by ZITADEL proxy)
+    host = _headers.get("x-zitadel-forward-host") || _headers.get("host");
+  } else {
+    // Self-hosted mode: use standard proxy headers (x-forwarded-host → host)
+    host = _headers.get("x-forwarded-host") || _headers.get("host");
+  }
 
   if (!host || typeof host !== "string") {
     throw new Error("No host found in headers");
+  }
+
+  // SECURITY: Validate against trusted hosts to prevent host header injection
+  if (!isTrustedHost(host)) {
+    console.warn(`[SECURITY] Untrusted host rejected: ${host}`);
+    throw new Error(`Untrusted host: ${host}`);
   }
 
   return host;
@@ -32,12 +88,6 @@ export async function getOriginalHost(): Promise<string> {
 /**
  * Gets the original host with protocol prefix.
  * Automatically detects if localhost should use http:// or https://
- *
- * ⚠️ SERVER-SIDE ONLY: This function can only be used in:
- * - Server Actions (functions with "use server")
- * - Server Components (React components that run on the server)
- * - Route Handlers (API routes)
- * - Middleware
  *
  * @returns The full URL prefix (e.g., "https://zitadel.com")
  */

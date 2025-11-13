@@ -1,36 +1,47 @@
 import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { NextRequest } from "next/server";
+import { isMultiTenant } from "./deployment";
 
 /**
- * Extracts the service url and region from the headers if used in a multitenant context (host, x-zitadel-forward-host header)
- * or falls back to the ZITADEL_API_URL for a self hosting deployment
- * or falls back to the host header for a self hosting deployment using custom domains
- * @param headers
- * @returns the service url and region from the headers
- * @throws if the service url could not be determined
+ * Extracts the service URL based on deployment mode and configuration.
  *
+ * Priority:
+ * 1. ZITADEL_API_URL (if set) - Used by both self-hosted and future multi-tenant
+ * 2. x-zitadel-forward-host (multi-tenant only) - Set by ZITADEL proxy
+ * 3. host header (multi-tenant fallback) - For dynamic host resolution
+ *
+ * ⚠️ SECURITY: Self-hosted deployments MUST set ZITADEL_API_URL.
+ * No fallback to host header for self-hosted to prevent host header injection.
+ *
+ * @param headers - Request headers
+ * @returns Object containing the service URL
+ * @throws Error if the service URL could not be determined
  */
 export function getServiceUrlFromHeaders(headers: ReadonlyHeaders): {
   serviceUrl: string;
 } {
   let instanceUrl;
 
-  const forwardedHost = headers.get("x-zitadel-forward-host");
-  // use the forwarded host if available (multitenant), otherwise fall back to the host of the deployment itself
-  if (forwardedHost) {
-    instanceUrl = forwardedHost;
-    instanceUrl = instanceUrl.startsWith("http://")
-      ? instanceUrl
-      : `https://${instanceUrl}`;
-  } else if (process.env.ZITADEL_API_URL) {
+  // Priority: 1) ZITADEL_API_URL (if set) 2) x-zitadel-forward-host (multi-tenant only)
+  if (process.env.ZITADEL_API_URL) {
+    // Use configured API URL when available (both self-hosted and future multi-tenant internal)
     instanceUrl = process.env.ZITADEL_API_URL;
-  } else {
-    const host = headers.get("host");
+  } else if (isMultiTenant()) {
+    // Multi-tenant without API URL: use forwarded host from ZITADEL proxy
+    const forwardedHost = headers.get("x-zitadel-forward-host");
+    if (forwardedHost) {
+      instanceUrl =
+        forwardedHost.startsWith("http://") || forwardedHost.startsWith("https://")
+          ? forwardedHost
+          : `https://${forwardedHost}`;
+    } else {
+      const host = headers.get("host");
 
-    if (host) {
-      const [hostname] = host.split(":");
-      if (hostname !== "localhost") {
-        instanceUrl = host.startsWith("http") ? host : `https://${host}`;
+      if (host) {
+        const [hostname] = host.split(":");
+        if (hostname !== "localhost") {
+          instanceUrl = host.startsWith("http://") || host.startsWith("https://") ? host : `https://${host}`;
+        }
       }
     }
   }
@@ -50,9 +61,7 @@ export function constructUrl(request: NextRequest, path: string) {
     : request.nextUrl.protocol;
 
   const forwardedHost =
-    request.headers.get("x-zitadel-forward-host") ??
-    request.headers.get("x-forwarded-host") ??
-    request.headers.get("host");
+    request.headers.get("x-zitadel-forward-host") ?? request.headers.get("x-forwarded-host") ?? request.headers.get("host");
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   return new URL(`${basePath}${path}`, `${forwardedProto}//${forwardedHost}`);
 }

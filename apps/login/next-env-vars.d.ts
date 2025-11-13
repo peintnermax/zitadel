@@ -44,5 +44,20 @@ declare namespace NodeJS {
      * Optional: The application name shown in the login and invite emails
      */
     NEXT_PUBLIC_APPLICATION_NAME?: string;
+
+    /**
+     * Optional: Comma-separated list of trusted hosts for security validation.
+     * Used to prevent host header injection attacks in password reset emails, etc.
+     * Supports wildcards for subdomains (e.g., "*.yourdomain.com")
+     *
+     * Options:
+     * - Comma-separated list: "accounts.company.com,*.staging.company.com,localhost:3000" (enables validation)
+     * - Undefined (not set): Disables validation (default - relies on reverse proxy security)
+     *
+     * Example: "accounts.company.com,*.staging.company.com,localhost:3000"
+     *
+     * @security Configure your reverse proxy to validate/strip headers, or set this to enable validation
+     */
+    TRUSTED_HOSTS?: string;
   }
 }
