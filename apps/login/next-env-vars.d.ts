@@ -59,5 +59,13 @@ declare namespace NodeJS {
      * @security Configure your reverse proxy to validate/strip headers, or set this to enable validation
      */
     TRUSTED_HOSTS?: string;
+
+    /**
+     * Internal: Set to "true" by ZITADEL Cloud infrastructure to identify multi-tenant deployments.
+     * Self-hosted deployments should NOT set this variable.
+     *
+     * @internal
+     */
+    ZITADEL_CLOUD?: string;
   }
 }

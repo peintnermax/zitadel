@@ -60,8 +60,16 @@ export function constructUrl(request: NextRequest, path: string) {
     ? `${request.headers.get("x-forwarded-proto")}:`
     : request.nextUrl.protocol;
 
-  const forwardedHost =
-    request.headers.get("x-zitadel-forward-host") ?? request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  // Deployment-aware host selection
+  let forwardedHost: string | null;
+  if (isMultiTenant()) {
+    // Multi-tenant: trust x-zitadel-forward-host from ZITADEL proxy
+    forwardedHost = request.headers.get("x-zitadel-forward-host") ?? request.headers.get("host");
+  } else {
+    // Self-hosted: use standard proxy headers only
+    forwardedHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  }
+
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   return new URL(`${basePath}${path}`, `${forwardedProto}//${forwardedHost}`);
 }

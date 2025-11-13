@@ -7,7 +7,7 @@ import { SessionService } from "@zitadel/proto/zitadel/session/v2/session_servic
 import { SettingsService } from "@zitadel/proto/zitadel/settings/v2/settings_service_pb";
 import { UserService } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 import { systemAPIToken } from "./api";
-import { isMultiTenant } from "./deployment";
+import { hasSystemUserCredentials, hasServiceUserToken } from "./deployment";
 import { createServerTransport } from "./zitadel";
 
 type ServiceClass =
@@ -22,21 +22,21 @@ type ServiceClass =
 export async function createServiceForHost<T extends ServiceClass>(service: T, serviceUrl: string) {
   let token;
 
-  // Determine authentication method based on deployment mode
-  if (isMultiTenant()) {
-    // Multi-tenant: use system user token with JWT
+  // Determine authentication method based on available credentials
+  // Prefer system user JWT if available, fallback to service user token
+  if (hasSystemUserCredentials()) {
     token = await systemAPIToken();
-  } else {
-    // Self-hosted: use service user token from env
+  } else if (hasServiceUserToken()) {
+    // Use service user token authentication (self-hosted)
     token = process.env.ZITADEL_SERVICE_USER_TOKEN;
+  } else {
+    throw new Error(
+      "No authentication credentials found. Set either system user credentials (AUDIENCE, SYSTEM_USER_ID, SYSTEM_USER_PRIVATE_KEY) or ZITADEL_SERVICE_USER_TOKEN",
+    );
   }
 
   if (!serviceUrl) {
     throw new Error("No instance url found");
-  }
-
-  if (!token) {
-    throw new Error("No token found");
   }
 
   const transport = createServerTransport(token, serviceUrl);
