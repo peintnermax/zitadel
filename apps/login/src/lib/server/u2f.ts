@@ -23,7 +23,7 @@ type VerifyU2FCommand = {
 export async function addU2F(command: RegisterU2FCommand) {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = await getOriginalHost();
+  const host = getOriginalHost(_headers);
 
   const sessionCookie = await getSessionCookieById({
     sessionId: command.sessionId,
@@ -33,9 +33,7 @@ export async function addU2F(command: RegisterU2FCommand) {
     return { error: "Could not get session" };
   }
 
-  const session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
-    sessionToken: sessionCookie.token,
-  });
+  const session = await getSession({ serviceConfig, sessionId: sessionCookie.id, sessionToken: sessionCookie.token });
 
   const [hostname] = host.split(":");
 
@@ -69,9 +67,7 @@ export async function verifyU2F(command: VerifyU2FCommand) {
     sessionId: command.sessionId,
   });
 
-  const session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
-    sessionToken: sessionCookie.token,
-  });
+  const session = await getSession({ serviceConfig, sessionId: sessionCookie.id, sessionToken: sessionCookie.token });
 
   const userId = session?.session?.factors?.user?.id;
 

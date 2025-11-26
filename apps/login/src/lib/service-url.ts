@@ -1,6 +1,7 @@
 import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { NextRequest } from "next/server";
 import { ServiceConfig } from "./zitadel";
+import { getOriginalHost, getPublicHost } from "./server/host";
 
 /**
  * Extracts the service URL based on deployment mode and configuration.
@@ -25,29 +26,28 @@ export function getServiceConfig(headers: ReadonlyHeaders): { serviceConfig: Ser
   }
 
   let instanceHost, publicHost;
-  // Multi-tenant deployment: use forwarded host from Zitadel proxy
-  const forwardedHost = headers.get("x-zitadel-forward-host");
 
-  if (!forwardedHost) {
+  // use forwarded host from proxy - headers are forwarded to the APIs.
+  const forwardedInstanceHost = getOriginalHost(headers);
+
+  if (!forwardedInstanceHost) {
     return {
       serviceConfig: {
         baseUrl: process.env.ZITADEL_API_URL,
       },
     };
   } else {
-    instanceHost = forwardedHost;
+    instanceHost = forwardedInstanceHost;
 
-    const host = headers.get("host");
-
+    // public host is the host that the user sees in their browser URL
+    const host = getPublicHost(headers);
     if (!host) {
       throw new Error("host is not set");
     }
-
     const [hostname] = host.split(":");
     if (hostname !== "localhost") {
       publicHost = host;
     }
-
     if (!publicHost) {
       throw new Error("Service URL could not be determined in multi-tenant mode");
     }

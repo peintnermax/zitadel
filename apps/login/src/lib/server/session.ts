@@ -40,8 +40,7 @@ export async function skipMFAAndContinueWithNextUrl({
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization: organization,
-  });
+  const loginSettings = await getLoginSettings({ serviceConfig, organization: organization });
 
   await humanMFAInitSkipped({ serviceConfig, userId });
 
@@ -75,8 +74,7 @@ export async function continueWithSession({ requestId, ...session }: ContinueWit
 
   const t = await getTranslations("error");
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization: session.factors?.user?.organizationId,
-  });
+  const loginSettings = await getLoginSettings({ serviceConfig, organization: session.factors?.user?.organizationId });
 
   if (requestId && session.id && session.factors?.user) {
     return completeFlowOrGetUrl(
@@ -127,7 +125,7 @@ export async function updateSession(options: UpdateSessionCommand) {
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = await getOriginalHost();
+  const host = getOriginalHost(_headers);
 
   if (!host) {
     return { error: "Could not get host" };
@@ -139,8 +137,7 @@ export async function updateSession(options: UpdateSessionCommand) {
     challenges.webAuthN.domain = hostname;
   }
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization,
-  });
+  const loginSettings = await getLoginSettings({ serviceConfig, organization });
 
   let lifetime = checks?.webAuthN
     ? loginSettings?.multiFactorCheckLifetime // TODO different lifetime for webauthn u2f/passkey
@@ -171,8 +168,7 @@ export async function updateSession(options: UpdateSessionCommand) {
   // if password, check if user has MFA methods
   let authMethods;
   if (checks && checks.password && session.factors?.user?.id) {
-    const response = await listAuthenticationMethodTypes({ serviceConfig, userId: session.factors.user.id,
-    });
+    const response = await listAuthenticationMethodTypes({ serviceConfig, userId: session.factors.user.id });
     if (response.authMethodTypes && response.authMethodTypes.length) {
       authMethods = response.authMethodTypes;
     }
@@ -198,7 +194,9 @@ export async function clearSession(options: ClearSessionOptions) {
 
   const sessionCookie = await getSessionCookieById({ sessionId });
 
-  const deleteResponse = await deleteSession({ serviceConfig, sessionId: sessionCookie.id,
+  const deleteResponse = await deleteSession({
+    serviceConfig,
+    sessionId: sessionCookie.id,
     sessionToken: sessionCookie.token,
   });
 

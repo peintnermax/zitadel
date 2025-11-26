@@ -64,7 +64,7 @@ export async function registerPasskeyLink(
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = await getOriginalHost();
+  const host = getOriginalHost(_headers);
 
   let session: GetSessionResponse | undefined;
   let createdSession: Session | undefined;
@@ -74,9 +74,7 @@ export async function registerPasskeyLink(
   if (command.sessionId) {
     // Session-based flow (existing logic)
     const sessionCookie = await getSessionCookieById({ sessionId: command.sessionId });
-    session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
-      sessionToken: sessionCookie.token,
-    });
+    session = await getSession({ serviceConfig, sessionId: sessionCookie.id, sessionToken: sessionCookie.token });
 
     if (!session?.session?.factors?.user?.id) {
       return { error: "Could not determine user from session" };
@@ -87,8 +85,7 @@ export async function registerPasskeyLink(
     const sessionValid = isSessionValid(session.session);
 
     if (!sessionValid.valid) {
-      const authmethods = await listAuthenticationMethodTypes({ serviceConfig, userId: currentUserId,
-      });
+      const authmethods = await listAuthenticationMethodTypes({ serviceConfig, userId: currentUserId });
 
       // if the user has no authmethods set, we need to check if the user was verified
       if (authmethods.authMethodTypes.length !== 0) {
@@ -113,8 +110,7 @@ export async function registerPasskeyLink(
         code: command.code,
       };
     } else {
-      const codeResponse = await createPasskeyRegistrationLink({ serviceConfig, userId: currentUserId,
-      });
+      const codeResponse = await createPasskeyRegistrationLink({ serviceConfig, userId: currentUserId });
 
       if (!codeResponse?.code?.code) {
         return { error: "Could not create registration link" };
@@ -130,8 +126,7 @@ export async function registerPasskeyLink(
     };
 
     // Check if user exists
-    const userResponse = await getUserByID({ serviceConfig, userId: currentUserId,
-    });
+    const userResponse = await getUserByID({ serviceConfig, userId: currentUserId });
 
     if (!userResponse || !userResponse.user) {
       return { error: "User not found" };
@@ -171,10 +166,7 @@ export async function registerPasskeyLink(
     throw new Error("Could not determine user");
   }
 
-  return registerPasskey({ serviceConfig, userId: currentUserId,
-    code: registerCode,
-    domain: hostname,
-  });
+  return registerPasskey({ serviceConfig, userId: currentUserId, code: registerCode, domain: hostname });
 }
 
 export async function verifyPasskeyRegistration(command: VerifyPasskeyCommand) {
@@ -204,9 +196,7 @@ export async function verifyPasskeyRegistration(command: VerifyPasskeyCommand) {
     const sessionCookie = await getSessionCookieById({
       sessionId: command.sessionId,
     });
-    const session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
-      sessionToken: sessionCookie.token,
-    });
+    const session = await getSession({ serviceConfig, sessionId: sessionCookie.id, sessionToken: sessionCookie.token });
     const userId = session?.session?.factors?.user?.id;
 
     if (!userId) {
@@ -219,15 +209,16 @@ export async function verifyPasskeyRegistration(command: VerifyPasskeyCommand) {
     currentUserId = command.userId!;
 
     // Verify user exists
-    const userResponse = await getUserByID({ serviceConfig, userId: currentUserId,
-    });
+    const userResponse = await getUserByID({ serviceConfig, userId: currentUserId });
 
     if (!userResponse || !userResponse.user) {
       throw new Error("User not found");
     }
   }
 
-  return zitadelVerifyPasskeyRegistration({ serviceConfig, request: create(VerifyPasskeyRegistrationRequestSchema, {
+  return zitadelVerifyPasskeyRegistration({
+    serviceConfig,
+    request: create(VerifyPasskeyRegistrationRequestSchema, {
       passkeyId: command.passkeyId,
       publicKeyCredential: command.publicKeyCredential,
       passkeyName,
@@ -265,8 +256,7 @@ export async function sendPasskey(command: SendPasskeyCommand) {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization,
-  });
+  const loginSettings = await getLoginSettings({ serviceConfig, organization });
 
   let lifetime = command.lifetime; // Use provided lifetime first
 
@@ -300,8 +290,7 @@ export async function sendPasskey(command: SendPasskeyCommand) {
 
   let userResponse;
   try {
-    userResponse = await getUserByID({ serviceConfig, userId: session?.factors?.user?.id,
-    });
+    userResponse = await getUserByID({ serviceConfig, userId: session?.factors?.user?.id });
   } catch (error) {
     console.error("Error fetching user by ID:", error);
     return { error: t("verify.errors.couldNotGetUser") };

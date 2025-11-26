@@ -26,7 +26,7 @@ export default async function Page(props: {
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = await getOriginalHost();
+  const host = getOriginalHost(_headers);
 
   const {
     loginName, // send from password page
@@ -40,14 +40,11 @@ export default async function Page(props: {
 
   const session = sessionId
     ? await loadSessionById(sessionId, organization)
-    : await loadMostRecentSession({ serviceConfig, sessionParams: { loginName, organization },
-      });
+    : await loadMostRecentSession({ serviceConfig, sessionParams: { loginName, organization } });
 
   async function loadSessionById(sessionId: string, organization?: string) {
     const recent = await getSessionCookieById({ sessionId, organization });
-    return getSession({ serviceConfig, sessionId: recent.id,
-      sessionToken: recent.token,
-    }).then((response) => {
+    return getSession({ serviceConfig, sessionId: recent.id, sessionToken: recent.token }).then((response) => {
       if (response?.session) {
         return response.session;
       }
@@ -55,10 +52,14 @@ export default async function Page(props: {
   }
 
   // email links do not come with organization, thus we need to use the session's organization
-  const branding = await getBrandingSettings({ serviceConfig, organization: organization ?? session?.factors?.user?.organizationId,
+  const branding = await getBrandingSettings({
+    serviceConfig,
+    organization: organization ?? session?.factors?.user?.organizationId,
   });
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization: organization ?? session?.factors?.user?.organizationId,
+  const loginSettings = await getLoginSettings({
+    serviceConfig,
+    organization: organization ?? session?.factors?.user?.organizationId,
   });
 
   return (

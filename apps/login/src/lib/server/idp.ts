@@ -21,7 +21,7 @@ export type RedirectToIdpState = { error?: string | null } | undefined;
 export async function redirectToIdp(prevState: RedirectToIdpState, formData: FormData): Promise<RedirectToIdpState> {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = await getOriginalHost();
+  const host = getOriginalHost(_headers);
 
   const params = new URLSearchParams();
 
@@ -43,7 +43,9 @@ export async function redirectToIdp(prevState: RedirectToIdpState, formData: For
     redirect(`/idp/ldap?` + params.toString());
   }
 
-  const response = await startIDPFlow({ serviceConfig, host,
+  const response = await startIDPFlow({
+    serviceConfig,
+    host,
     idpId,
     successUrl: `/idp/${provider}/process?` + params.toString(),
     failureUrl: `/idp/${provider}/failure?` + params.toString(),
@@ -108,15 +110,13 @@ export async function createNewSessionFromIdpIntent(command: CreateNewSessionCom
     throw new Error("No userId or loginName provided");
   }
 
-  const userResponse = await getUserByID({ serviceConfig, userId: command.userId,
-  });
+  const userResponse = await getUserByID({ serviceConfig, userId: command.userId });
 
   if (!userResponse || !userResponse.user) {
     return { error: "User not found in the system" };
   }
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization: userResponse.user.details?.resourceOwner,
-  });
+  const loginSettings = await getLoginSettings({ serviceConfig, organization: userResponse.user.details?.resourceOwner });
 
   const session = await createSessionForIdpAndUpdateCookie({
     userId: command.userId,
@@ -141,8 +141,7 @@ export async function createNewSessionFromIdpIntent(command: CreateNewSessionCom
   // check if user has MFA methods
   let authMethods;
   if (session.factors?.user?.id) {
-    const response = await listAuthenticationMethodTypes({ serviceConfig, userId: session.factors.user.id,
-    });
+    const response = await listAuthenticationMethodTypes({ serviceConfig, userId: session.factors.user.id });
     if (response.authMethodTypes && response.authMethodTypes.length) {
       authMethods = response.authMethodTypes;
     }
@@ -192,7 +191,9 @@ export async function createNewSessionForLDAP(command: createNewSessionForLDAPCo
     return { error: "No username or password provided" };
   }
 
-  const response = await startLDAPIdentityProviderFlow({ serviceConfig, idpId: command.idpId,
+  const response = await startLDAPIdentityProviderFlow({
+    serviceConfig,
+    idpId: command.idpId,
     username: command.username,
     password: command.password,
   });
