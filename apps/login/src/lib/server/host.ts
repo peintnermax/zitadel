@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import { isMultiTenant } from "../deployment";
 
 /**
  * List of trusted hosts that are allowed to be used in URLs (e.g., password reset links).
@@ -51,10 +50,6 @@ function isTrustedHost(host: string): boolean {
  * - Set to comma-separated list: "example.com,*.example.com" (enables validation)
  * - Leave unset to disable validation (relies on reverse proxy security)
  *
- * The function determines which headers to trust based on deployment mode:
- * - Multi-tenant: Uses x-zitadel-forward-host (custom ZITADEL header)
- * - Self-hosted: Uses x-forwarded-host → host (standard proxy headers)
- *
  * @returns The host string (e.g., "zitadel.com")
  * @throws Error if no host is found or if host is not trusted (when validation enabled)
  */
@@ -63,14 +58,8 @@ export async function getOriginalHost(): Promise<string> {
 
   let host: string | null;
 
-  // Determine deployment mode and choose appropriate headers
-  if (isMultiTenant()) {
-    // Multi-tenant mode: trust x-zitadel-forward-host (custom header set by ZITADEL proxy)
-    host = _headers.get("x-zitadel-forward-host") || _headers.get("host");
-  } else {
-    // Self-hosted mode: use standard proxy headers (x-forwarded-host → host)
-    host = _headers.get("x-forwarded-host") || _headers.get("host");
-  }
+  // use standard proxy headers (x-forwarded-host → host) for both multi-tenant and self-hosted
+  host = _headers.get("x-forwarded-host") || _headers.get("host");
 
   if (!host || typeof host !== "string") {
     throw new Error("No host found in headers");

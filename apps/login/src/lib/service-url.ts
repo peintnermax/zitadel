@@ -1,6 +1,5 @@
 import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { NextRequest } from "next/server";
-import { isMultiTenant } from "./deployment";
 import { ServiceConfig } from "./zitadel";
 
 /**
@@ -64,12 +63,10 @@ export function getServiceConfig(headers: ReadonlyHeaders): { serviceConfig: Ser
 }
 
 export function constructUrl(request: NextRequest, path: string) {
-  const forwardedProto = request.headers.get("x-forwarded-proto")
-    ? `${request.headers.get("x-forwarded-proto")}:`
-    : request.nextUrl.protocol;
+  const protocol = request.nextUrl.protocol;
 
   const forwardedHost =
     request.headers.get("x-zitadel-forward-host") ?? request.headers.get("x-forwarded-host") ?? request.headers.get("host");
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-  return new URL(`${basePath}${path}`, `${forwardedProto}//${forwardedHost}`);
+  return new URL(`${basePath}${path}`, `${protocol}//${forwardedHost}`);
 }

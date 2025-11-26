@@ -1,27 +1,4 @@
 /**
- * Determines if the application is running in multi-tenant mode (ZITADEL Cloud).
- *
- * Multi-tenant mode is identified by the ZITADEL_CLOUD environment variable
- * being explicitly set to "true" in ZITADEL Cloud infrastructure.
- *
- *
- * @returns true if running in ZITADEL Cloud (multi-tenant), false for self-hosted
- */
-export function isMultiTenant(): boolean {
-  // Check for ZITADEL Cloud-specific marker
-  return process.env.ZITADEL_CLOUD === "true";
-}
-
-/**
- * Determines if the application is running in self-hosted mode.
- *
- * @returns true if running in self-hosted mode, false for ZITADEL Cloud
- */
-export function isSelfHosted(): boolean {
-  return !isMultiTenant();
-}
-
-/**
  * Checks if system user credentials are available for JWT authentication.
  *
  * System user authentication requires:
