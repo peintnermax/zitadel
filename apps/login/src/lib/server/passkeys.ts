@@ -20,7 +20,7 @@ import { headers } from "next/headers";
 import { userAgent } from "next/server";
 import { getTranslations } from "next-intl/server";
 import { getMostRecentSessionCookie, getSessionCookieById, getSessionCookieByLoginName } from "../cookies";
-import { getServiceUrlFromHeaders } from "../service-url";
+import { getServiceConfig } from "../service-url";
 import { checkEmailVerification, checkUserVerification } from "../verify-helper";
 import { createSessionAndUpdateCookie, setSessionAndUpdateCookie } from "./cookie";
 import { getOriginalHost } from "./host";
@@ -63,7 +63,7 @@ export async function registerPasskeyLink(
   }
 
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
   const host = await getOriginalHost();
 
   let session: GetSessionResponse | undefined;
@@ -74,9 +74,7 @@ export async function registerPasskeyLink(
   if (command.sessionId) {
     // Session-based flow (existing logic)
     const sessionCookie = await getSessionCookieById({ sessionId: command.sessionId });
-    session = await getSession({
-      serviceUrl,
-      sessionId: sessionCookie.id,
+    session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
       sessionToken: sessionCookie.token,
     });
 
@@ -89,9 +87,7 @@ export async function registerPasskeyLink(
     const sessionValid = isSessionValid(session.session);
 
     if (!sessionValid.valid) {
-      const authmethods = await listAuthenticationMethodTypes({
-        serviceUrl,
-        userId: currentUserId,
+      const authmethods = await listAuthenticationMethodTypes({ serviceConfig, userId: currentUserId,
       });
 
       // if the user has no authmethods set, we need to check if the user was verified
@@ -117,9 +113,7 @@ export async function registerPasskeyLink(
         code: command.code,
       };
     } else {
-      const codeResponse = await createPasskeyRegistrationLink({
-        serviceUrl,
-        userId: currentUserId,
+      const codeResponse = await createPasskeyRegistrationLink({ serviceConfig, userId: currentUserId,
       });
 
       if (!codeResponse?.code?.code) {
@@ -136,9 +130,7 @@ export async function registerPasskeyLink(
     };
 
     // Check if user exists
-    const userResponse = await getUserByID({
-      serviceUrl,
-      userId: currentUserId,
+    const userResponse = await getUserByID({ serviceConfig, userId: currentUserId,
     });
 
     if (!userResponse || !userResponse.user) {
@@ -179,9 +171,7 @@ export async function registerPasskeyLink(
     throw new Error("Could not determine user");
   }
 
-  return registerPasskey({
-    serviceUrl,
-    userId: currentUserId,
+  return registerPasskey({ serviceConfig, userId: currentUserId,
     code: registerCode,
     domain: hostname,
   });
@@ -189,7 +179,7 @@ export async function registerPasskeyLink(
 
 export async function verifyPasskeyRegistration(command: VerifyPasskeyCommand) {
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
   if (!command.sessionId && !command.userId) {
     throw new Error("Either sessionId or userId must be provided");
@@ -214,9 +204,7 @@ export async function verifyPasskeyRegistration(command: VerifyPasskeyCommand) {
     const sessionCookie = await getSessionCookieById({
       sessionId: command.sessionId,
     });
-    const session = await getSession({
-      serviceUrl,
-      sessionId: sessionCookie.id,
+    const session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
       sessionToken: sessionCookie.token,
     });
     const userId = session?.session?.factors?.user?.id;
@@ -231,9 +219,7 @@ export async function verifyPasskeyRegistration(command: VerifyPasskeyCommand) {
     currentUserId = command.userId!;
 
     // Verify user exists
-    const userResponse = await getUserByID({
-      serviceUrl,
-      userId: currentUserId,
+    const userResponse = await getUserByID({ serviceConfig, userId: currentUserId,
     });
 
     if (!userResponse || !userResponse.user) {
@@ -241,9 +227,7 @@ export async function verifyPasskeyRegistration(command: VerifyPasskeyCommand) {
     }
   }
 
-  return zitadelVerifyPasskeyRegistration({
-    serviceUrl,
-    request: create(VerifyPasskeyRegistrationRequestSchema, {
+  return zitadelVerifyPasskeyRegistration({ serviceConfig, request: create(VerifyPasskeyRegistrationRequestSchema, {
       passkeyId: command.passkeyId,
       publicKeyCredential: command.publicKeyCredential,
       passkeyName,
@@ -279,11 +263,9 @@ export async function sendPasskey(command: SendPasskeyCommand) {
   }
 
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
-  const loginSettings = await getLoginSettings({
-    serviceUrl,
-    organization,
+  const loginSettings = await getLoginSettings({ serviceConfig, organization,
   });
 
   let lifetime = command.lifetime; // Use provided lifetime first
@@ -318,9 +300,7 @@ export async function sendPasskey(command: SendPasskeyCommand) {
 
   let userResponse;
   try {
-    userResponse = await getUserByID({
-      serviceUrl,
-      userId: session?.factors?.user?.id,
+    userResponse = await getUserByID({ serviceConfig, userId: session?.factors?.user?.id,
     });
   } catch (error) {
     console.error("Error fetching user by ID:", error);

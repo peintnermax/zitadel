@@ -20,7 +20,7 @@ import { cookies, headers } from "next/headers";
 import { completeFlowOrGetUrl } from "../client";
 import { getSessionCookieByLoginName } from "../cookies";
 import { getOrSetFingerprintId } from "../fingerprint";
-import { getServiceUrlFromHeaders } from "../service-url";
+import { getServiceConfig } from "../service-url";
 import { loadMostRecentSession } from "../session";
 import { checkMFAFactors } from "../verify-helper";
 import { createSessionAndUpdateCookie } from "./cookie";
@@ -29,19 +29,15 @@ import { getTranslations } from "next-intl/server";
 
 export async function verifyTOTP(code: string, loginName?: string, organization?: string) {
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
-  return loadMostRecentSession({
-    serviceUrl,
-    sessionParams: {
+  return loadMostRecentSession({ serviceConfig, sessionParams: {
       loginName,
       organization,
     },
   }).then((session) => {
     if (session?.factors?.user?.id) {
-      return verifyTOTPRegistration({
-        serviceUrl,
-        code,
+      return verifyTOTPRegistration({ serviceConfig, code,
         userId: session.factors.user.id,
       });
     } else {
@@ -62,20 +58,16 @@ type VerifyUserByEmailCommand = {
 export async function sendVerification(command: VerifyUserByEmailCommand) {
   const t = await getTranslations("verify");
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
   const verifyResponse = command.isInvite
-    ? await verifyInviteCode({
-        serviceUrl,
-        userId: command.userId,
+    ? await verifyInviteCode({ serviceConfig, userId: command.userId,
         verificationCode: command.code,
       }).catch((error) => {
         console.warn(error);
         return { error: t("errors.couldNotVerifyInvite") };
       })
-    : await verifyEmail({
-        serviceUrl,
-        userId: command.userId,
+    : await verifyEmail({ serviceConfig, userId: command.userId,
         verificationCode: command.code,
       }).catch((error) => {
         console.warn(error);
@@ -91,9 +83,7 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
   }
 
   let session: Session | undefined;
-  const userResponse = await getUserByID({
-    serviceUrl,
-    userId: command.userId,
+  const userResponse = await getUserByID({ serviceConfig, userId: command.userId,
   });
 
   if (!userResponse || !userResponse.user) {
@@ -110,9 +100,7 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
   });
 
   if (sessionCookie) {
-    session = await getSession({
-      serviceUrl,
-      sessionId: sessionCookie.id,
+    session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
       sessionToken: sessionCookie.token,
     }).then((response) => {
       if (response?.session) {
@@ -122,9 +110,7 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
   }
 
   // load auth methods for user
-  const authMethodResponse = await listAuthenticationMethodTypes({
-    serviceUrl,
-    userId: user.userId,
+  const authMethodResponse = await listAuthenticationMethodTypes({ serviceConfig, userId: user.userId,
   });
 
   if (!authMethodResponse || !authMethodResponse.authMethodTypes) {
@@ -203,14 +189,12 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
     return { redirect: `/verify/success?${verifySuccessParams}` };
   }
 
-  const loginSettings = await getLoginSettings({
-    serviceUrl,
-    organization: user.details?.resourceOwner,
+  const loginSettings = await getLoginSettings({ serviceConfig, organization: user.details?.resourceOwner,
   });
 
   // redirect to mfa factor if user has one, or redirect to set one up
   const mfaFactorCheck = await checkMFAFactors(
-    serviceUrl,
+    serviceConfig,
     session,
     loginSettings,
     authMethodResponse.authMethodTypes,
@@ -253,15 +237,13 @@ type resendVerifyEmailCommand = {
 export async function resendVerification(command: resendVerifyEmailCommand) {
   const t = await getTranslations("verify");
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
   const hostWithProtocol = await getOriginalHostWithProtocol();
 
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   return command.isInvite
-    ? createInviteCode({
-        serviceUrl,
-        userId: command.userId,
+    ? createInviteCode({ serviceConfig, userId: command.userId,
         urlTemplate:
           `${hostWithProtocol}${basePath}/verify?code={{.Code}}&userId={{.UserID}}&organization={{.OrgID}}&invite=true` +
           (command.requestId ? `&requestId=${command.requestId}` : ""),
@@ -272,8 +254,8 @@ export async function resendVerification(command: resendVerifyEmailCommand) {
         return { error: t("errors.couldNotResendInvite") };
       })
     : zitadelSendEmailCode({
+        serviceConfig,
         userId: command.userId,
-        serviceUrl,
         urlTemplate:
           `${hostWithProtocol}${basePath}/verify?code={{.Code}}&userId={{.UserID}}&organization={{.OrgID}}` +
           (command.requestId ? `&requestId=${command.requestId}` : ""),
@@ -287,22 +269,18 @@ type SendEmailCommand = {
 
 export async function sendEmailCode(command: SendEmailCommand) {
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
-  return zitadelSendEmailCode({
-    serviceUrl,
-    userId: command.userId,
+  return zitadelSendEmailCode({ serviceConfig, userId: command.userId,
     urlTemplate: command.urlTemplate,
   });
 }
 
 export async function sendInviteEmailCode(command: SendEmailCommand) {
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
-  return createInviteCode({
-    serviceUrl,
-    userId: command.userId,
+  return createInviteCode({ serviceConfig, userId: command.userId,
     urlTemplate: command.urlTemplate,
   });
 }

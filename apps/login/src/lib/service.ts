@@ -8,7 +8,7 @@ import { SettingsService } from "@zitadel/proto/zitadel/settings/v2/settings_ser
 import { UserService } from "@zitadel/proto/zitadel/user/v2/user_service_pb";
 import { systemAPIToken } from "./api";
 import { hasSystemUserCredentials, hasServiceUserToken } from "./deployment";
-import { createServerTransport } from "./zitadel";
+import { createServerTransport, ServiceConfig } from "./zitadel";
 
 type ServiceClass =
   | typeof IdentityProviderService
@@ -19,7 +19,7 @@ type ServiceClass =
   | typeof SettingsService
   | typeof SAMLService;
 
-export async function createServiceForHost<T extends ServiceClass>(service: T, serviceUrl: string) {
+export async function createServiceForHost<T extends ServiceClass>(service: T, serviceConfig: ServiceConfig) {
   let token;
 
   // Determine authentication method based on available credentials
@@ -35,11 +35,11 @@ export async function createServiceForHost<T extends ServiceClass>(service: T, s
     );
   }
 
-  if (!serviceUrl) {
-    throw new Error("No instance url found");
+  if (!serviceConfig) {
+    throw new Error("No service config found");
   }
 
-  const transport = createServerTransport(token, serviceUrl);
+  const transport = createServerTransport(token, serviceConfig);
 
   return createClientFor<T>(service)(transport);
 }

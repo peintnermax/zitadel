@@ -3,8 +3,7 @@ import { SecuritySettings } from "@zitadel/proto/zitadel/settings/v2/security_se
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_CSP } from "../constants/csp";
-import { isSelfHosted } from "./lib/deployment";
-import { getServiceUrlFromHeaders } from "./lib/service-url";
+import { getServiceConfig } from "./lib/service-url";
 export const config = {
   matcher: ["/.well-known/:path*", "/oauth/:path*", "/oidc/:path*", "/idps/callback/:path*", "/saml/:path*", "/:path*"],
 };
@@ -43,7 +42,7 @@ export async function middleware(request: NextRequest) {
   const isMatched = proxyPaths.some((prefix) => request.nextUrl.pathname.startsWith(prefix));
 
   // Only proxy in self-hosted mode
-  if (!isMatched || !isSelfHosted()) {
+  if (!isMatched) {
     // For multi-tenant or non-proxied routes, just add the header and continue
     return NextResponse.next({
       request: { headers: requestHeaders },
@@ -51,9 +50,9 @@ export async function middleware(request: NextRequest) {
   }
 
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
-  const instanceHost = `${serviceUrl}`.replace("https://", "").replace("http://", "");
+  const instanceHost = `${serviceConfig.baseUrl}`.replace("https://", "").replace("http://", "");
 
   // Add additional headers as before
   requestHeaders.set("x-zitadel-public-host", `${request.nextUrl.host}`);
@@ -73,7 +72,7 @@ export async function middleware(request: NextRequest) {
     responseHeaders.delete("X-Frame-Options");
   }
 
-  request.nextUrl.href = `${serviceUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
+  request.nextUrl.href = `${serviceConfig.baseUrl}${request.nextUrl.pathname}${request.nextUrl.search}`;
 
   return NextResponse.rewrite(request.nextUrl, {
     request: {

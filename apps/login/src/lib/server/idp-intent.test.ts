@@ -12,7 +12,7 @@ vi.mock("@zitadel/client", () => ({
 }));
 
 vi.mock("../service-url", () => ({
-  getServiceUrlFromHeaders: vi.fn(),
+  getServiceConfig: vi.fn(),
 }));
 
 vi.mock("../zitadel", () => ({
@@ -111,7 +111,7 @@ describe("processIDPCallback", () => {
 
     // Import mocked modules
     const { headers } = await import("next/headers");
-    const { getServiceUrlFromHeaders } = await import("../service-url");
+    const { getServiceConfig } = await import("../service-url");
     const {
       retrieveIDPIntent,
       getIDPByID,
@@ -129,7 +129,7 @@ describe("processIDPCallback", () => {
 
     // Setup mocks
     mockHeaders = vi.mocked(headers);
-    mockGetServiceUrlFromHeaders = vi.mocked(getServiceUrlFromHeaders);
+    mockGetServiceUrlFromHeaders = vi.mocked(getServiceConfig);
     mockRetrieveIDPIntent = vi.mocked(retrieveIDPIntent);
     mockGetIDPByID = vi.mocked(getIDPByID);
     mockUpdateHuman = vi.mocked(updateHuman);

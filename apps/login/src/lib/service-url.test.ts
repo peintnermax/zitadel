@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach, vi } from "vitest";
-import { getServiceUrlFromHeaders, constructUrl } from "./service-url";
+import { getServiceConfig, constructUrl } from "./service-url";
 import { NextRequest } from "next/server";
 
 describe("Service URL utilities", () => {
@@ -13,7 +13,7 @@ describe("Service URL utilities", () => {
     process.env = originalEnv;
   });
 
-  describe("getServiceUrlFromHeaders - Security", () => {
+  describe("getServiceConfig - Security", () => {
     test("should NOT use x-zitadel-forward-host in self-hosted mode", () => {
       // Self-hosted mode (no ZITADEL_CLOUD)
       process.env.ZITADEL_CLOUD = undefined as any;
@@ -28,7 +28,7 @@ describe("Service URL utilities", () => {
       } as any;
 
       // Should throw because ZITADEL_API_URL is required for self-hosted
-      expect(() => getServiceUrlFromHeaders(mockHeaders)).toThrow("Service URL could not be determined");
+      expect(() => getServiceConfig(mockHeaders)).toThrow("Service URL could not be determined");
     });
 
     test("should use x-zitadel-forward-host ONLY in multi-tenant mode", () => {
@@ -43,9 +43,9 @@ describe("Service URL utilities", () => {
         }),
       } as any;
 
-      const result = getServiceUrlFromHeaders(mockHeaders);
+      const result = getServiceConfig(mockHeaders);
 
-      expect(result.serviceUrl).toBe("https://accounts.zitadel.cloud");
+      expect(result.serviceConfig.baseUrl).toBe("https://accounts.zitadel.cloud");
       expect(mockHeaders.get).toHaveBeenCalledWith("x-zitadel-forward-host");
     });
 
@@ -61,9 +61,9 @@ describe("Service URL utilities", () => {
         }),
       } as any;
 
-      const result = getServiceUrlFromHeaders(mockHeaders);
+      const result = getServiceConfig(mockHeaders);
 
-      expect(result.serviceUrl).toBe("https://api.zitadel.cloud");
+      expect(result.serviceConfig.baseUrl).toBe("https://api.zitadel.cloud");
       // Should not even check x-zitadel-forward-host when API URL is set
     });
 
@@ -76,7 +76,7 @@ describe("Service URL utilities", () => {
         get: vi.fn(() => null),
       } as any;
 
-      expect(() => getServiceUrlFromHeaders(mockHeaders)).toThrow("Service URL could not be determined");
+      expect(() => getServiceConfig(mockHeaders)).toThrow("Service URL could not be determined");
     });
   });
 

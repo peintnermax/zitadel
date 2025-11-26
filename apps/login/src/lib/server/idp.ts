@@ -6,11 +6,12 @@ import {
   listAuthenticationMethodTypes,
   startIdentityProviderFlow,
   startLDAPIdentityProviderFlow,
+  ServiceConfig,
 } from "@/lib/zitadel";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { completeFlowOrGetUrl } from "../client";
-import { getServiceUrlFromHeaders } from "../service-url";
+import { getServiceConfig } from "../service-url";
 import { checkEmailVerification, checkMFAFactors } from "../verify-helper";
 import { createSessionForIdpAndUpdateCookie } from "./cookie";
 import { getOriginalHost } from "./host";
@@ -19,7 +20,7 @@ export type RedirectToIdpState = { error?: string | null } | undefined;
 
 export async function redirectToIdp(prevState: RedirectToIdpState, formData: FormData): Promise<RedirectToIdpState> {
   const _headers = await headers();
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
   const host = await getOriginalHost();
 
   const params = new URLSearchParams();
@@ -42,9 +43,7 @@ export async function redirectToIdp(prevState: RedirectToIdpState, formData: For
     redirect(`/idp/ldap?` + params.toString());
   }
 
-  const response = await startIDPFlow({
-    serviceUrl,
-    host,
+  const response = await startIDPFlow({ serviceConfig, host,
     idpId,
     successUrl: `/idp/${provider}/process?` + params.toString(),
     failureUrl: `/idp/${provider}/failure?` + params.toString(),
@@ -62,7 +61,7 @@ export async function redirectToIdp(prevState: RedirectToIdpState, formData: For
 }
 
 export type StartIDPFlowCommand = {
-  serviceUrl: string;
+  serviceConfig: ServiceConfig;
   host: string;
   idpId: string;
   successUrl: string;
@@ -73,7 +72,7 @@ async function startIDPFlow(command: StartIDPFlowCommand) {
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   const url = await startIdentityProviderFlow({
-    serviceUrl: command.serviceUrl,
+    serviceConfig: command.serviceConfig,
     idpId: command.idpId,
     urls: {
       successUrl: `${command.host.includes("localhost") ? "http://" : "https://"}${command.host}${basePath}${command.successUrl}`,
@@ -103,24 +102,20 @@ export type CreateNewSessionCommand = {
 export async function createNewSessionFromIdpIntent(command: CreateNewSessionCommand) {
   const _headers = await headers();
 
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
   if (!command.userId || !command.idpIntent) {
     throw new Error("No userId or loginName provided");
   }
 
-  const userResponse = await getUserByID({
-    serviceUrl,
-    userId: command.userId,
+  const userResponse = await getUserByID({ serviceConfig, userId: command.userId,
   });
 
   if (!userResponse || !userResponse.user) {
     return { error: "User not found in the system" };
   }
 
-  const loginSettings = await getLoginSettings({
-    serviceUrl,
-    organization: userResponse.user.details?.resourceOwner,
+  const loginSettings = await getLoginSettings({ serviceConfig, organization: userResponse.user.details?.resourceOwner,
   });
 
   const session = await createSessionForIdpAndUpdateCookie({
@@ -146,9 +141,7 @@ export async function createNewSessionFromIdpIntent(command: CreateNewSessionCom
   // check if user has MFA methods
   let authMethods;
   if (session.factors?.user?.id) {
-    const response = await listAuthenticationMethodTypes({
-      serviceUrl,
-      userId: session.factors.user.id,
+    const response = await listAuthenticationMethodTypes({ serviceConfig, userId: session.factors.user.id,
     });
     if (response.authMethodTypes && response.authMethodTypes.length) {
       authMethods = response.authMethodTypes;
@@ -156,7 +149,7 @@ export async function createNewSessionFromIdpIntent(command: CreateNewSessionCom
   }
 
   const mfaFactorCheck = await checkMFAFactors(
-    serviceUrl,
+    serviceConfig,
     session,
     loginSettings,
     authMethods || [], // Pass empty array if no auth methods
@@ -193,15 +186,13 @@ type createNewSessionForLDAPCommand = {
 export async function createNewSessionForLDAP(command: createNewSessionForLDAPCommand) {
   const _headers = await headers();
 
-  const { serviceUrl } = getServiceUrlFromHeaders(_headers);
+  const { serviceConfig } = getServiceConfig(_headers);
 
   if (!command.username || !command.password) {
     return { error: "No username or password provided" };
   }
 
-  const response = await startLDAPIdentityProviderFlow({
-    serviceUrl,
-    idpId: command.idpId,
+  const response = await startLDAPIdentityProviderFlow({ serviceConfig, idpId: command.idpId,
     username: command.username,
     password: command.password,
   });

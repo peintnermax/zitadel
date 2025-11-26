@@ -15,7 +15,7 @@ vi.mock("@zitadel/client", () => ({
 }));
 
 vi.mock("../service-url", () => ({
-  getServiceUrlFromHeaders: vi.fn(),
+  getServiceConfig: vi.fn(),
 }));
 
 vi.mock("../idp", () => ({
@@ -70,7 +70,7 @@ describe("sendLoginname", () => {
     // Import mocked modules
     const { headers } = await import("next/headers");
     const { create } = await import("@zitadel/client");
-    const { getServiceUrlFromHeaders } = await import("../service-url");
+    const { getServiceConfig } = await import("../service-url");
     const {
       getLoginSettings,
       searchUsers,
@@ -87,7 +87,7 @@ describe("sendLoginname", () => {
     // Setup mocks
     mockHeaders = vi.mocked(headers);
     mockCreate = vi.mocked(create);
-    mockGetServiceUrlFromHeaders = vi.mocked(getServiceUrlFromHeaders);
+    mockGetServiceUrlFromHeaders = vi.mocked(getServiceConfig);
     mockGetLoginSettings = vi.mocked(getLoginSettings);
     mockSearchUsers = vi.mocked(searchUsers);
     mockCreateSessionAndUpdateCookie = vi.mocked(createSessionAndUpdateCookie);

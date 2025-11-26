@@ -99,7 +99,7 @@ describe("isSessionValid", () => {
         factors: undefined,
       });
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith("Session has no user");
@@ -118,7 +118,7 @@ describe("isSessionValid", () => {
         authMethodTypes: [],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith("Session is expired", expect.any(String));
@@ -145,7 +145,7 @@ describe("isSessionValid", () => {
         authMethodTypes: [],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
     });
@@ -177,7 +177,7 @@ describe("isSessionValid", () => {
         forceMfaLocalOnly: false,
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -205,7 +205,7 @@ describe("isSessionValid", () => {
         forceMfaLocalOnly: false,
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -240,7 +240,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(true);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -276,7 +276,7 @@ describe("isSessionValid", () => {
         authMethodTypes: [AuthenticationMethodType.OTP_EMAIL],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -305,7 +305,7 @@ describe("isSessionValid", () => {
         authMethodTypes: [AuthenticationMethodType.U2F],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -340,7 +340,7 @@ describe("isSessionValid", () => {
         authMethodTypes: [AuthenticationMethodType.TOTP, AuthenticationMethodType.OTP_EMAIL],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -370,7 +370,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(false);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -407,7 +407,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(false);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -445,7 +445,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(true);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -497,7 +497,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(false);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       // This should be true - if it's false, the original bug still exists
       expect(result).toBe(true);
@@ -537,7 +537,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(false);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       // With our fix, this should be true (session is valid)
       // With the old logic, this would have been false (bug)
@@ -574,7 +574,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(false);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -609,7 +609,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(true);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith("Session has no valid multifactor", expect.any(Object));
@@ -645,7 +645,7 @@ describe("isSessionValid", () => {
         forceMfaLocalOnly: false,
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -679,7 +679,7 @@ describe("isSessionValid", () => {
         forceMfaLocalOnly: true,
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -714,15 +714,15 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(true);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(zitadelModule.getLoginSettings).toHaveBeenCalledWith({
-        serviceUrl: mockServiceUrl,
+        serviceConfig: { baseUrl: mockServiceUrl },
         organization: mockOrganizationId,
       });
       expect(zitadelModule.listAuthenticationMethodTypes).toHaveBeenCalledWith({
-        serviceUrl: mockServiceUrl,
+        serviceConfig: { baseUrl: mockServiceUrl },
         userId: mockUserId,
       });
       consoleSpy.mockRestore();
@@ -775,7 +775,7 @@ describe("isSessionValid", () => {
         },
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -829,7 +829,7 @@ describe("isSessionValid", () => {
         },
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -864,7 +864,7 @@ describe("isSessionValid", () => {
 
       vi.mocked(verifyHelperModule.shouldEnforceMFA).mockReturnValue(false);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
       // getUserByID should not be called when EMAIL_VERIFICATION is disabled
@@ -900,7 +900,7 @@ describe("isSessionValid", () => {
         forceMfaLocalOnly: false,
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -936,12 +936,12 @@ describe("isSessionValid", () => {
         authMethodTypes: [],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
       expect(verifyHelperModule.shouldEnforceMFA).toHaveBeenCalledWith(session, expect.any(Object));
       expect(zitadelModule.getLoginSettings).toHaveBeenCalledWith({
-        serviceUrl: mockServiceUrl,
+        serviceConfig: { baseUrl: mockServiceUrl },
         organization: mockOrganizationId,
       });
     });
@@ -977,16 +977,16 @@ describe("isSessionValid", () => {
         authMethodTypes: [AuthenticationMethodType.TOTP, AuthenticationMethodType.OTP_EMAIL],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(false);
       expect(verifyHelperModule.shouldEnforceMFA).toHaveBeenCalledWith(session, expect.any(Object));
       expect(zitadelModule.getLoginSettings).toHaveBeenCalledWith({
-        serviceUrl: mockServiceUrl,
+        serviceConfig: { baseUrl: mockServiceUrl },
         organization: mockOrganizationId,
       });
       expect(zitadelModule.listAuthenticationMethodTypes).toHaveBeenCalledWith({
-        serviceUrl: mockServiceUrl,
+        serviceConfig: { baseUrl: mockServiceUrl },
         userId: mockUserId,
       });
     });
@@ -1022,12 +1022,12 @@ describe("isSessionValid", () => {
         authMethodTypes: [AuthenticationMethodType.TOTP, AuthenticationMethodType.OTP_EMAIL],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
       expect(verifyHelperModule.shouldEnforceMFA).toHaveBeenCalledWith(session, expect.any(Object));
       expect(zitadelModule.getLoginSettings).toHaveBeenCalledWith({
-        serviceUrl: mockServiceUrl,
+        serviceConfig: { baseUrl: mockServiceUrl },
         organization: mockOrganizationId,
       });
       // Should not call listAuthenticationMethodTypes since shouldEnforceMFA returned false
@@ -1065,7 +1065,7 @@ describe("isSessionValid", () => {
         authMethodTypes: [AuthenticationMethodType.TOTP],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
@@ -1103,12 +1103,12 @@ describe("isSessionValid", () => {
         authMethodTypes: [AuthenticationMethodType.TOTP],
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
       expect(verifyHelperModule.shouldEnforceMFA).toHaveBeenCalledWith(session, expect.any(Object));
       expect(zitadelModule.getLoginSettings).toHaveBeenCalledWith({
-        serviceUrl: mockServiceUrl,
+        serviceConfig: { baseUrl: mockServiceUrl },
         organization: mockOrganizationId,
       });
       // Should not call listAuthenticationMethodTypes since shouldEnforceMFA returned false
@@ -1144,7 +1144,7 @@ describe("isSessionValid", () => {
         forceMfaLocalOnly: false,
       } as any);
 
-      const result = await isSessionValid({ serviceUrl: mockServiceUrl, session });
+      const result = await isSessionValid({ serviceConfig: { baseUrl: mockServiceUrl }, session });
 
       expect(result).toBe(true);
     });
