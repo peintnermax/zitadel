@@ -428,7 +428,7 @@ export async function checkSessionAndSetPassword({ sessionId, password }: CheckS
       return createUserServiceClient(transportPromise);
     };
 
-    const selfService = await myUserService(serviceConfig, `${sessionCookie.token}`);
+    const selfService = await myUserService(serviceConfig, sessionCookie.token);
 
     return selfService
       .setPassword(
