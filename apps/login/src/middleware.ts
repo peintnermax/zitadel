@@ -52,11 +52,13 @@ export async function middleware(request: NextRequest) {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  const instanceHost = `${serviceConfig.baseUrl}`.replace("https://", "").replace("http://", "");
-
-  // Add additional headers as before
-  requestHeaders.set("x-zitadel-public-host", `${request.nextUrl.host}`);
-  requestHeaders.set("x-zitadel-instance-host", instanceHost);
+  // add additional headers if available
+  if (serviceConfig.publicHost) {
+    requestHeaders.set("x-zitadel-public-host", serviceConfig.publicHost);
+  }
+  if (serviceConfig.instanceHost) {
+    requestHeaders.set("x-zitadel-instance-host", serviceConfig.instanceHost);
+  }
 
   const responseHeaders = new Headers();
   responseHeaders.set("Access-Control-Allow-Origin", "*");
