@@ -1,7 +1,7 @@
 import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
 import { NextRequest } from "next/server";
 import { ServiceConfig } from "./zitadel";
-import { getOriginalHost, getPublicHost } from "./server/host";
+import { getInstanceHost, getPublicHost } from "./server/host";
 
 /**
  * Extracts the service URL based on deployment mode and configuration.
@@ -28,7 +28,7 @@ export function getServiceConfig(headers: ReadonlyHeaders): { serviceConfig: Ser
   let instanceHost, publicHost;
 
   // use forwarded host from proxy - headers are forwarded to the APIs.
-  const forwardedInstanceHost = getOriginalHost(headers);
+  const forwardedInstanceHost = getInstanceHost(headers);
 
   if (!forwardedInstanceHost) {
     return {

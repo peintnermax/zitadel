@@ -22,7 +22,7 @@ import {
   startIdentityProviderFlow,
 } from "../zitadel";
 import { createSessionAndUpdateCookie } from "./cookie";
-import { getOriginalHost } from "./host";
+import { getInstanceHost } from "./host";
 import { IDPLink } from "@zitadel/proto/zitadel/user/v2/idp_pb";
 
 export type SendLoginnameCommand = {
@@ -100,7 +100,7 @@ export async function sendLoginname(command: SendLoginnameCommand) {
       if (activeIdps.length === 1) {
         const _headers = await headers();
         const { serviceConfig } = getServiceConfig(_headers);
-        const host = getOriginalHost(_headers);
+        const host = getInstanceHost(_headers);
 
         const identityProviderType = activeIdps[0].type;
         const provider = idpTypeToSlug(identityProviderType);
@@ -145,7 +145,7 @@ export async function sendLoginname(command: SendLoginnameCommand) {
     if (identityProviders.length === 1) {
       const _headers = await headers();
       const { serviceConfig } = getServiceConfig(_headers);
-      const host = getOriginalHost(_headers);
+      const host = getInstanceHost(_headers);
 
       const identityProviderId = identityProviders[0].idpId;
 

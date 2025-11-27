@@ -17,7 +17,7 @@ vi.mock("../service-url", () => ({
 }));
 
 vi.mock("./host", () => ({
-  getOriginalHost: vi.fn(),
+  getInstanceHost: vi.fn(),
 }));
 
 vi.mock("../zitadel", () => ({
@@ -36,13 +36,13 @@ describe("redirectToIdp", () => {
     // Import mocked modules
     const { headers } = await import("next/headers");
     const { getServiceConfig } = await import("../service-url");
-    const { getOriginalHost } = await import("./host");
+    const { getInstanceHost } = await import("./host");
     const { startIdentityProviderFlow } = await import("../zitadel");
 
     // Setup mocks
     mockHeaders = vi.mocked(headers);
     mockGetServiceUrlFromHeaders = vi.mocked(getServiceConfig);
-    mockGetOriginalHost = vi.mocked(getOriginalHost);
+    mockGetOriginalHost = vi.mocked(getInstanceHost);
     mockStartIdentityProviderFlow = vi.mocked(startIdentityProviderFlow);
 
     // Default mock implementations

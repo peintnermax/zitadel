@@ -8,7 +8,7 @@ import { headers } from "next/headers";
  * @returns The host string (e.g., "zitadel.com")
  * @throws Error if no host is found
  */
-export function getOriginalHost(headers: ReadonlyHeaders): string {
+export function getInstanceHost(headers: ReadonlyHeaders): string {
   // use standard proxy headers (x-forwarded-host → host) for both multi-tenant and self-hosted, do not use x-zitadel-instance-host
   const instanceHost = headers.get("x-zitadel-instance-host") || headers.get("x-forwarded-host") || headers.get("host");
 
@@ -26,7 +26,7 @@ export function getOriginalHost(headers: ReadonlyHeaders): string {
  * @returns The full URL prefix (e.g., "https://zitadel.com")
  */
 export function getOriginalHostWithProtocol(headers: ReadonlyHeaders): string {
-  const host = getOriginalHost(headers);
+  const host = getInstanceHost(headers);
   const protocol = host.includes("localhost") ? "http://" : "https://";
   return `${protocol}${host}`;
 }

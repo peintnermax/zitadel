@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach, afterEach } from "vitest";
-import { getOriginalHost, getOriginalHostWithProtocol, getPublicHost } from "./host";
+import { getInstanceHost, getOriginalHostWithProtocol, getPublicHost } from "./host";
 
 describe("Host utility functions", () => {
   beforeEach(() => {
@@ -10,7 +10,7 @@ describe("Host utility functions", () => {
     vi.restoreAllMocks();
   });
 
-  describe("getOriginalHost", () => {
+  describe("getInstanceHost", () => {
     test("should use x-zitadel-instance-host when available", () => {
       const mockHeaders = {
         get: vi.fn((key: string) => {
@@ -21,7 +21,7 @@ describe("Host utility functions", () => {
         }),
       } as any;
 
-      const result = getOriginalHost(mockHeaders);
+      const result = getInstanceHost(mockHeaders);
       expect(result).toBe("instance.zitadel.cloud");
       expect(mockHeaders.get).toHaveBeenCalledWith("x-zitadel-instance-host");
     });
@@ -36,7 +36,7 @@ describe("Host utility functions", () => {
         }),
       } as any;
 
-      const result = getOriginalHost(mockHeaders);
+      const result = getInstanceHost(mockHeaders);
       expect(result).toBe("accounts.mycompany.com");
       expect(mockHeaders.get).toHaveBeenCalledWith("x-zitadel-instance-host");
       expect(mockHeaders.get).toHaveBeenCalledWith("x-forwarded-host");
@@ -52,7 +52,7 @@ describe("Host utility functions", () => {
         }),
       } as any;
 
-      const result = getOriginalHost(mockHeaders);
+      const result = getInstanceHost(mockHeaders);
       expect(result).toBe("localhost:3000");
       expect(mockHeaders.get).toHaveBeenCalledWith("x-zitadel-instance-host");
       expect(mockHeaders.get).toHaveBeenCalledWith("x-forwarded-host");
@@ -64,7 +64,7 @@ describe("Host utility functions", () => {
         get: vi.fn(() => null),
       } as any;
 
-      expect(() => getOriginalHost(mockHeaders)).toThrow("No host found in headers");
+      expect(() => getInstanceHost(mockHeaders)).toThrow("No host found in headers");
     });
 
     test("should throw error when host is empty string", () => {
@@ -72,7 +72,7 @@ describe("Host utility functions", () => {
         get: vi.fn(() => ""),
       } as any;
 
-      expect(() => getOriginalHost(mockHeaders)).toThrow("No host found in headers");
+      expect(() => getInstanceHost(mockHeaders)).toThrow("No host found in headers");
     });
 
     test("should throw error when host is not a string", () => {
@@ -80,7 +80,7 @@ describe("Host utility functions", () => {
         get: vi.fn(() => 123),
       } as any;
 
-      expect(() => getOriginalHost(mockHeaders)).toThrow("No host found in headers");
+      expect(() => getInstanceHost(mockHeaders)).toThrow("No host found in headers");
     });
   });
 
@@ -147,7 +147,7 @@ describe("Host utility functions", () => {
         }),
       } as any;
 
-      const result = getOriginalHost(mockHeaders);
+      const result = getInstanceHost(mockHeaders);
       expect(result).toBe("auth.company.com");
     });
 
@@ -186,7 +186,7 @@ describe("Host utility functions", () => {
         }),
       } as any;
 
-      const result = getOriginalHost(mockHeaders);
+      const result = getInstanceHost(mockHeaders);
       expect(result).toBe("customer.zitadel.cloud");
     });
   });
@@ -239,7 +239,7 @@ describe("Host utility functions", () => {
         }),
       } as any;
 
-      const result = getOriginalHost(mockHeaders);
+      const result = getInstanceHost(mockHeaders);
       expect(result).toBe("priority0.com");
       // Should only call x-zitadel-instance-host since it's available
       expect(mockHeaders.get).toHaveBeenCalledWith("x-zitadel-instance-host");
@@ -304,7 +304,7 @@ describe("Host utility functions", () => {
       expect(() => getPublicHost(mockHeaders)).toThrow("No host found in headers");
     });
 
-    test("should differ from getOriginalHost when x-zitadel-instance-host is present", () => {
+    test("should differ from getInstanceHost when x-zitadel-instance-host is present", () => {
       const mockHeaders = {
         get: vi.fn((key: string) => {
           if (key === "x-zitadel-instance-host") return "instance.zitadel.cloud";
@@ -314,12 +314,12 @@ describe("Host utility functions", () => {
         }),
       } as any;
 
-      const originalHost = getOriginalHost(mockHeaders);
+      const instanceHost = getInstanceHost(mockHeaders);
       const publicHost = getPublicHost(mockHeaders);
 
-      expect(originalHost).toBe("instance.zitadel.cloud");
+      expect(instanceHost).toBe("instance.zitadel.cloud");
       expect(publicHost).toBe("accounts.company.com");
-      expect(originalHost).not.toBe(publicHost);
+      expect(instanceHost).not.toBe(publicHost);
     });
   });
 });

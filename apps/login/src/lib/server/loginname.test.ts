@@ -39,7 +39,7 @@ vi.mock("./cookie", () => ({
 }));
 
 vi.mock("./host", () => ({
-  getOriginalHost: vi.fn(),
+  getInstanceHost: vi.fn(),
 }));
 
 // this returns the key itself that can be checked not the translated value
@@ -81,7 +81,7 @@ describe("sendLoginname", () => {
       getOrgsByDomain,
     } = await import("../zitadel");
     const { createSessionAndUpdateCookie } = await import("./cookie");
-    const { getOriginalHost } = await import("./host");
+    const { getInstanceHost } = await import("./host");
     const { idpTypeToSlug } = await import("../idp");
 
     // Setup mocks
@@ -93,7 +93,7 @@ describe("sendLoginname", () => {
     mockCreateSessionAndUpdateCookie = vi.mocked(createSessionAndUpdateCookie);
     mockListAuthenticationMethodTypes = vi.mocked(listAuthenticationMethodTypes);
     mockListIDPLinks = vi.mocked(listIDPLinks);
-    mockGetOriginalHost = vi.mocked(getOriginalHost);
+    mockGetOriginalHost = vi.mocked(getInstanceHost);
     mockStartIdentityProviderFlow = vi.mocked(startIdentityProviderFlow);
     mockGetActiveIdentityProviders = vi.mocked(getActiveIdentityProviders);
     mockGetIDPByID = vi.mocked(getIDPByID);

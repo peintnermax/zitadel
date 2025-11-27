@@ -4,7 +4,7 @@ import { LoginOTP } from "@/components/login-otp";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
 import { getSessionCookieById } from "@/lib/cookies";
-import { getOriginalHost } from "@/lib/server/host";
+import { getInstanceHost } from "@/lib/server/host";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
 import { getBrandingSettings, getLoginSettings, getSession } from "@/lib/zitadel";
@@ -26,7 +26,7 @@ export default async function Page(props: {
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = getOriginalHost(_headers);
+  const host = getInstanceHost(_headers);
 
   const {
     loginName, // send from password page
