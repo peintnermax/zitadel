@@ -65,8 +65,7 @@ export function getServiceConfig(headers: ReadonlyHeaders): { serviceConfig: Ser
 export function constructUrl(request: NextRequest, path: string) {
   const protocol = request.nextUrl.protocol;
 
-  const forwardedHost =
-    request.headers.get("x-zitadel-forward-host") ?? request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const forwardedHost = getPublicHost(request.headers);
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
   return new URL(`${basePath}${path}`, `${protocol}//${forwardedHost}`);
 }
