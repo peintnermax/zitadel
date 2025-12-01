@@ -47,7 +47,7 @@ export async function resetPassword(command: ResetPasswordCommand) {
   const t = await getTranslations("password");
 
   // Get the original host that the user sees with protocol
-  const hostWithProtocol = await getOriginalHostWithProtocol();
+  const hostWithProtocol = await getOriginalHostWithProtocol(_headers);
 
   const users = await listUsers({ serviceConfig, loginName: command.loginName, organizationId: command.organization });
 

@@ -31,15 +31,15 @@ export async function verifyTOTP(code: string, loginName?: string, organization?
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  return loadMostRecentSession({ serviceConfig, sessionParams: {
+  return loadMostRecentSession({
+    serviceConfig,
+    sessionParams: {
       loginName,
       organization,
     },
   }).then((session) => {
     if (session?.factors?.user?.id) {
-      return verifyTOTPRegistration({ serviceConfig, code,
-        userId: session.factors.user.id,
-      });
+      return verifyTOTPRegistration({ serviceConfig, code, userId: session.factors.user.id });
     } else {
       throw Error("No user id found in session.");
     }
@@ -61,15 +61,11 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
   const { serviceConfig } = getServiceConfig(_headers);
 
   const verifyResponse = command.isInvite
-    ? await verifyInviteCode({ serviceConfig, userId: command.userId,
-        verificationCode: command.code,
-      }).catch((error) => {
+    ? await verifyInviteCode({ serviceConfig, userId: command.userId, verificationCode: command.code }).catch((error) => {
         console.warn(error);
         return { error: t("errors.couldNotVerifyInvite") };
       })
-    : await verifyEmail({ serviceConfig, userId: command.userId,
-        verificationCode: command.code,
-      }).catch((error) => {
+    : await verifyEmail({ serviceConfig, userId: command.userId, verificationCode: command.code }).catch((error) => {
         console.warn(error);
         return { error: t("errors.couldNotVerifyEmail") };
       });
@@ -83,8 +79,7 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
   }
 
   let session: Session | undefined;
-  const userResponse = await getUserByID({ serviceConfig, userId: command.userId,
-  });
+  const userResponse = await getUserByID({ serviceConfig, userId: command.userId });
 
   if (!userResponse || !userResponse.user) {
     return { error: t("errors.couldNotLoadUser") };
@@ -100,18 +95,17 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
   });
 
   if (sessionCookie) {
-    session = await getSession({ serviceConfig, sessionId: sessionCookie.id,
-      sessionToken: sessionCookie.token,
-    }).then((response) => {
-      if (response?.session) {
-        return response.session;
-      }
-    });
+    session = await getSession({ serviceConfig, sessionId: sessionCookie.id, sessionToken: sessionCookie.token }).then(
+      (response) => {
+        if (response?.session) {
+          return response.session;
+        }
+      },
+    );
   }
 
   // load auth methods for user
-  const authMethodResponse = await listAuthenticationMethodTypes({ serviceConfig, userId: user.userId,
-  });
+  const authMethodResponse = await listAuthenticationMethodTypes({ serviceConfig, userId: user.userId });
 
   if (!authMethodResponse || !authMethodResponse.authMethodTypes) {
     return { error: t("errors.couldNotLoadAuthenticators") };
@@ -189,8 +183,7 @@ export async function sendVerification(command: VerifyUserByEmailCommand) {
     return { redirect: `/verify/success?${verifySuccessParams}` };
   }
 
-  const loginSettings = await getLoginSettings({ serviceConfig, organization: user.details?.resourceOwner,
-  });
+  const loginSettings = await getLoginSettings({ serviceConfig, organization: user.details?.resourceOwner });
 
   // redirect to mfa factor if user has one, or redirect to set one up
   const mfaFactorCheck = await checkMFAFactors(
@@ -238,12 +231,14 @@ export async function resendVerification(command: resendVerifyEmailCommand) {
   const t = await getTranslations("verify");
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const hostWithProtocol = await getOriginalHostWithProtocol();
+  const hostWithProtocol = await getOriginalHostWithProtocol(_headers);
 
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   return command.isInvite
-    ? createInviteCode({ serviceConfig, userId: command.userId,
+    ? createInviteCode({
+        serviceConfig,
+        userId: command.userId,
         urlTemplate:
           `${hostWithProtocol}${basePath}/verify?code={{.Code}}&userId={{.UserID}}&organization={{.OrgID}}&invite=true` +
           (command.requestId ? `&requestId=${command.requestId}` : ""),
@@ -271,16 +266,12 @@ export async function sendEmailCode(command: SendEmailCommand) {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  return zitadelSendEmailCode({ serviceConfig, userId: command.userId,
-    urlTemplate: command.urlTemplate,
-  });
+  return zitadelSendEmailCode({ serviceConfig, userId: command.userId, urlTemplate: command.urlTemplate });
 }
 
 export async function sendInviteEmailCode(command: SendEmailCommand) {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  return createInviteCode({ serviceConfig, userId: command.userId,
-    urlTemplate: command.urlTemplate,
-  });
+  return createInviteCode({ serviceConfig, userId: command.userId, urlTemplate: command.urlTemplate });
 }
