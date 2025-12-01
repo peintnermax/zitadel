@@ -10,7 +10,12 @@ import { headers } from "next/headers";
  */
 export function getInstanceHost(headers: ReadonlyHeaders): string {
   // use standard proxy headers (x-forwarded-host → host) for both multi-tenant and self-hosted, do not use x-zitadel-instance-host
-  const instanceHost = headers.get("x-zitadel-instance-host") || headers.get("x-forwarded-host") || headers.get("host");
+  // use x-zitadel-forward-host as fallback
+  const instanceHost =
+    headers.get("x-zitadel-instance-host") ||
+    headers.get("x-zitadel-forward-host") ||
+    headers.get("x-forwarded-host") ||
+    headers.get("host");
 
   if (!instanceHost || typeof instanceHost !== "string") {
     throw new Error("No host found in headers");
