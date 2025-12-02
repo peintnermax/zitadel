@@ -38,7 +38,7 @@ describe("Service URL utilities", () => {
       const result = getServiceConfig(mockHeaders);
 
       expect(result.serviceConfig.baseUrl).toBe("https://zitadel.mycompany.com");
-      expect(result.serviceConfig.instanceHost).toBe("mycompany.com");
+      expect(result.serviceConfig.instanceHost).toBeUndefined();
       expect(result.serviceConfig.publicHost).toBe("mycompany.com");
     });
 
@@ -77,12 +77,12 @@ describe("Service URL utilities", () => {
       expect(result.serviceConfig.publicHost).toBe("customer.zitadel.cloud");
     });
 
-    test("should throw when host header is missing in multi-tenant mode", () => {
+    test("should throw when host header is missing", () => {
       process.env.ZITADEL_API_URL = "https://api.zitadel.cloud";
 
       const mockHeaders = {
         get: vi.fn((key: string) => {
-          if (key === "x-zitadel-forward-host") return "customer.zitadel.cloud";
+          if (key === "x-zitadel-forward-host") return null;
           if (key === "host") return null;
           return null;
         }),
@@ -91,26 +91,12 @@ describe("Service URL utilities", () => {
       expect(() => getServiceConfig(mockHeaders)).toThrow("No host found in headers");
     });
 
-    test("should throw when host is localhost in multi-tenant mode", () => {
-      process.env.ZITADEL_API_URL = "https://api.zitadel.cloud";
-
-      const mockHeaders = {
-        get: vi.fn((key: string) => {
-          if (key === "x-zitadel-forward-host") return "customer.zitadel.cloud";
-          if (key === "host") return "localhost:3000";
-          return null;
-        }),
-      } as any;
-
-      expect(() => getServiceConfig(mockHeaders)).toThrow("Service URL could not be determined in multi-tenant mode");
-    });
-
     test("should handle host with port number", () => {
       process.env.ZITADEL_API_URL = "https://api.zitadel.cloud";
 
       const mockHeaders = {
         get: vi.fn((key: string) => {
-          if (key === "x-zitadel-forward-host") return "customer.zitadel.cloud";
+          if (key === "x-zitadel-forward-host") return "customer.zitadel.cloud:443";
           if (key === "host") return "customer.zitadel.cloud:443";
           return null;
         }),

@@ -27,7 +27,6 @@ export function getServiceConfig(headers: ReadonlyHeaders): { serviceConfig: Ser
 
   // use forwarded host from proxy - headers are forwarded to the APIs.
   const instanceHost = getInstanceHost(headers);
-
   const publicHost = getPublicHost(headers);
 
   return {
