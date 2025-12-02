@@ -40,6 +40,7 @@ vi.mock("./cookie", () => ({
 
 vi.mock("./host", () => ({
   getInstanceHost: vi.fn(),
+  getPublicHost: vi.fn(),
 }));
 
 // this returns the key itself that can be checked not the translated value
@@ -57,7 +58,8 @@ describe("sendLoginname", () => {
   let mockCreateSessionAndUpdateCookie: any;
   let mockListAuthenticationMethodTypes: any;
   let mockListIDPLinks: any;
-  let mockGetOriginalHost: any;
+  let mockGetInstanceHost: any;
+  let mockGetPublicHost: any;
   let mockStartIdentityProviderFlow: any;
   let mockGetActiveIdentityProviders: any;
   let mockGetIDPByID: any;
@@ -81,7 +83,7 @@ describe("sendLoginname", () => {
       getOrgsByDomain,
     } = await import("../zitadel");
     const { createSessionAndUpdateCookie } = await import("./cookie");
-    const { getInstanceHost } = await import("./host");
+    const { getInstanceHost, getPublicHost } = await import("./host");
     const { idpTypeToSlug } = await import("../idp");
 
     // Setup mocks
@@ -93,7 +95,8 @@ describe("sendLoginname", () => {
     mockCreateSessionAndUpdateCookie = vi.mocked(createSessionAndUpdateCookie);
     mockListAuthenticationMethodTypes = vi.mocked(listAuthenticationMethodTypes);
     mockListIDPLinks = vi.mocked(listIDPLinks);
-    mockGetOriginalHost = vi.mocked(getInstanceHost);
+    mockGetInstanceHost = vi.mocked(getInstanceHost);
+    mockGetPublicHost = vi.mocked(getPublicHost);
     mockStartIdentityProviderFlow = vi.mocked(startIdentityProviderFlow);
     mockGetActiveIdentityProviders = vi.mocked(getActiveIdentityProviders);
     mockGetIDPByID = vi.mocked(getIDPByID);
@@ -103,7 +106,8 @@ describe("sendLoginname", () => {
     // Default mock implementations
     mockHeaders.mockResolvedValue({} as any);
     mockGetServiceUrlFromHeaders.mockReturnValue({ serviceConfig: { baseUrl: "https://api.example.com" } });
-    mockGetOriginalHost.mockReturnValue("example.com");
+    mockGetInstanceHost.mockReturnValue("example.com");
+    mockGetPublicHost.mockReturnValue("example.com");
     mockIdpTypeToSlug.mockReturnValue("google");
     mockGetIDPByID.mockResolvedValue({
       id: "idp123",
