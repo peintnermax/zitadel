@@ -38,8 +38,8 @@ describe("Service URL utilities", () => {
       const result = getServiceConfig(mockHeaders);
 
       expect(result.serviceConfig.baseUrl).toBe("https://zitadel.mycompany.com");
-      expect(result.serviceConfig.instanceHost).toBeUndefined();
-      expect(result.serviceConfig.publicHost).toBeUndefined();
+      expect(result.serviceConfig.instanceHost).toBe("mycompany.com");
+      expect(result.serviceConfig.publicHost).toBe("mycompany.com");
     });
 
     test("should use x-zitadel-forward-host when present (multi-tenant)", () => {
@@ -88,7 +88,7 @@ describe("Service URL utilities", () => {
         }),
       } as any;
 
-      expect(() => getServiceConfig(mockHeaders)).toThrow("host is not set");
+      expect(() => getServiceConfig(mockHeaders)).toThrow("No host found in headers");
     });
 
     test("should throw when host is localhost in multi-tenant mode", () => {
@@ -128,6 +128,7 @@ describe("Service URL utilities", () => {
         headers: {
           get: vi.fn((key: string) => {
             if (key === "x-zitadel-forward-host") return "customer.zitadel.cloud";
+            if (key === "host") return "customer.zitadel.cloud";
             return null;
           }),
         },
