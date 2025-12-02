@@ -24,7 +24,7 @@ import { headers } from "next/headers";
 import { completeFlowOrGetUrl } from "../client";
 import { getSessionCookieById, getSessionCookieByLoginName } from "../cookies";
 import { getServiceConfig } from "../service-url";
-import { getOriginalHostWithProtocol } from "./host";
+import { getPublicHostWithProtocol } from "./host";
 import {
   checkEmailVerification,
   checkMFAFactors,
@@ -47,7 +47,7 @@ export async function resetPassword(command: ResetPasswordCommand) {
   const t = await getTranslations("password");
 
   // Get the original host that the user sees with protocol
-  const hostWithProtocol = await getOriginalHostWithProtocol(_headers);
+  const hostWithProtocol = await getPublicHostWithProtocol(_headers);
 
   const users = await listUsers({ serviceConfig, loginName: command.loginName, organizationId: command.organization });
 
