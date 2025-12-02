@@ -14,14 +14,14 @@ import { completeFlowOrGetUrl } from "../client";
 import { getServiceConfig } from "../service-url";
 import { checkEmailVerification, checkMFAFactors } from "../verify-helper";
 import { createSessionForIdpAndUpdateCookie } from "./cookie";
-import { getInstanceHost } from "./host";
+import { getPublicHost } from "./host";
 
 export type RedirectToIdpState = { error?: string | null } | undefined;
 
 export async function redirectToIdp(prevState: RedirectToIdpState, formData: FormData): Promise<RedirectToIdpState> {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = getInstanceHost(_headers);
+  const host = getPublicHost(_headers);
 
   const params = new URLSearchParams();
 
