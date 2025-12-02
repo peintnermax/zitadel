@@ -124,6 +124,7 @@ describe("Service URL utilities", () => {
 
   describe("constructUrl", () => {
     test("should construct URL with x-zitadel-forward-host when present", () => {
+      process.env.NEXT_PUBLIC_BASE_PATH = "";
       const mockRequest = {
         headers: {
           get: vi.fn((key: string) => {
@@ -145,6 +146,7 @@ describe("Service URL utilities", () => {
     });
 
     test("should fall back to x-forwarded-host when x-zitadel-forward-host is not present", () => {
+      process.env.NEXT_PUBLIC_BASE_PATH = "";
       const mockRequest = {
         headers: {
           get: vi.fn((key: string) => {
