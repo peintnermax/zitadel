@@ -1,5 +1,4 @@
 import { ReadonlyHeaders } from "next/dist/server/web/spec-extension/adapters/headers";
-import { headers } from "next/headers";
 
 /**
  * Gets the original host that the user sees in their browser URL.
