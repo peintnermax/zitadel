@@ -3,8 +3,8 @@ import { DynamicTheme } from "@/components/dynamic-theme";
 import { Translated } from "@/components/translated";
 import { UserAvatar } from "@/components/user-avatar";
 import { VerifyForm } from "@/components/verify-form";
+import { getPublicHostWithProtocol } from "@/lib/server/host";
 import { sendEmailCode, sendInviteEmailCode } from "@/lib/server/verify";
-import { getOriginalHostWithProtocol } from "@/lib/server/host";
 import { getServiceConfig } from "@/lib/service-url";
 import { loadMostRecentSession } from "@/lib/session";
 import { getBrandingSettings, getUserByID } from "@/lib/zitadel";
@@ -40,7 +40,7 @@ export default async function Page(props: { searchParams: Promise<any> }) {
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
   async function sendEmail(userId: string) {
-    const hostWithProtocol = await getOriginalHostWithProtocol(_headers);
+    const hostWithProtocol = await getPublicHostWithProtocol(_headers);
 
     if (invite === "true") {
       await sendInviteEmailCode({
