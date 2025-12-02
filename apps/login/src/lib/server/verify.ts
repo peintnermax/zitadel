@@ -24,7 +24,7 @@ import { getServiceConfig } from "../service-url";
 import { loadMostRecentSession } from "../session";
 import { checkMFAFactors } from "../verify-helper";
 import { createSessionAndUpdateCookie } from "./cookie";
-import { getOriginalHostWithProtocol } from "./host";
+import { getPublicHostWithProtocol } from "./host";
 import { getTranslations } from "next-intl/server";
 
 export async function verifyTOTP(code: string, loginName?: string, organization?: string) {
@@ -231,7 +231,7 @@ export async function resendVerification(command: resendVerifyEmailCommand) {
   const t = await getTranslations("verify");
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const hostWithProtocol = await getOriginalHostWithProtocol(_headers);
+  const hostWithProtocol = await getPublicHostWithProtocol(_headers);
 
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 

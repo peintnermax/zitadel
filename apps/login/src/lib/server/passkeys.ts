@@ -23,7 +23,7 @@ import { getMostRecentSessionCookie, getSessionCookieById, getSessionCookieByLog
 import { getServiceConfig } from "../service-url";
 import { checkEmailVerification, checkUserVerification } from "../verify-helper";
 import { createSessionAndUpdateCookie, setSessionAndUpdateCookie } from "./cookie";
-import { getInstanceHost } from "./host";
+import { getPublicHost } from "./host";
 import { completeFlowOrGetUrl } from "../client";
 
 type VerifyPasskeyCommand = {
@@ -64,7 +64,7 @@ export async function registerPasskeyLink(
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = getInstanceHost(_headers);
+  const host = getPublicHost(_headers);
 
   let session: GetSessionResponse | undefined;
   let createdSession: Session | undefined;

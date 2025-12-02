@@ -18,6 +18,7 @@ vi.mock("../service-url", () => ({
 
 vi.mock("./host", () => ({
   getInstanceHost: vi.fn(),
+  getPublicHost: vi.fn(),
 }));
 
 vi.mock("../zitadel", () => ({
@@ -27,7 +28,8 @@ vi.mock("../zitadel", () => ({
 describe("redirectToIdp", () => {
   let mockHeaders: any;
   let mockGetServiceUrlFromHeaders: any;
-  let mockGetOriginalHost: any;
+  let mockGetInstanceHost: any;
+  let mockGetPublicHost: any;
   let mockStartIdentityProviderFlow: any;
 
   beforeEach(async () => {
@@ -36,13 +38,14 @@ describe("redirectToIdp", () => {
     // Import mocked modules
     const { headers } = await import("next/headers");
     const { getServiceConfig } = await import("../service-url");
-    const { getInstanceHost } = await import("./host");
+    const { getInstanceHost, getPublicHost } = await import("./host");
     const { startIdentityProviderFlow } = await import("../zitadel");
 
     // Setup mocks
     mockHeaders = vi.mocked(headers);
     mockGetServiceUrlFromHeaders = vi.mocked(getServiceConfig);
-    mockGetOriginalHost = vi.mocked(getInstanceHost);
+    mockGetInstanceHost = vi.mocked(getInstanceHost);
+    mockGetPublicHost = vi.mocked(getPublicHost);
     mockStartIdentityProviderFlow = vi.mocked(startIdentityProviderFlow);
 
     // Default mock implementations
@@ -50,7 +53,8 @@ describe("redirectToIdp", () => {
     mockGetServiceUrlFromHeaders.mockReturnValue({
       serviceConfig: { baseUrl: "https://api.example.com" },
     });
-    mockGetOriginalHost.mockReturnValue("example.com");
+    mockGetInstanceHost.mockReturnValue("example.com");
+    mockGetPublicHost.mockReturnValue("example.com");
   });
 
   afterEach(() => {

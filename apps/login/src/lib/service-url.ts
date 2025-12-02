@@ -25,39 +25,15 @@ export function getServiceConfig(headers: ReadonlyHeaders): { serviceConfig: Ser
     throw new Error("ZITADEL_API_URL is not set");
   }
 
-  let instanceHost, publicHost;
-
   // use forwarded host from proxy - headers are forwarded to the APIs.
-  const forwardedInstanceHost = getInstanceHost(headers);
-
-  if (!forwardedInstanceHost) {
-    return {
-      serviceConfig: {
-        baseUrl: process.env.ZITADEL_API_URL,
-      },
-    };
-  } else {
-    instanceHost = forwardedInstanceHost;
-
-    // public host is the host that the user sees in their browser URL
-    const host = getPublicHost(headers);
-    if (!host) {
-      throw new Error("host is not set");
-    }
-    const [hostname] = host.split(":");
-    if (hostname !== "localhost") {
-      publicHost = host;
-    }
-    if (!publicHost) {
-      throw new Error("Service URL could not be determined in multi-tenant mode");
-    }
-  }
+  const instanceHost = getInstanceHost(headers);
+  const publicHost = getPublicHost(headers);
 
   return {
     serviceConfig: {
       baseUrl: process.env.ZITADEL_API_URL,
-      instanceHost: stripProtocol(instanceHost),
-      publicHost: stripProtocol(publicHost),
+      ...(instanceHost && { instanceHost: stripProtocol(instanceHost) }),
+      ...(publicHost && { publicHost: stripProtocol(publicHost) }),
     },
   };
 }

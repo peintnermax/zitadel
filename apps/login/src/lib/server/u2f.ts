@@ -7,7 +7,7 @@ import { headers } from "next/headers";
 import { userAgent } from "next/server";
 import { getSessionCookieById } from "../cookies";
 import { getServiceConfig } from "../service-url";
-import { getInstanceHost } from "./host";
+import { getPublicHost } from "./host";
 
 type RegisterU2FCommand = {
   sessionId: string;
@@ -23,7 +23,7 @@ type VerifyU2FCommand = {
 export async function addU2F(command: RegisterU2FCommand) {
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = getInstanceHost(_headers);
+  const host = getPublicHost(_headers);
 
   const sessionCookie = await getSessionCookieById({
     sessionId: command.sessionId,

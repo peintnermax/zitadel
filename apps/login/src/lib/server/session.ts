@@ -22,7 +22,7 @@ import {
   removeSessionFromCookie,
 } from "../cookies";
 import { getServiceConfig } from "../service-url";
-import { getInstanceHost } from "./host";
+import { getPublicHost } from "./host";
 
 export async function skipMFAAndContinueWithNextUrl({
   userId,
@@ -125,7 +125,7 @@ export async function updateSession(options: UpdateSessionCommand) {
 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
-  const host = getInstanceHost(_headers);
+  const host = getPublicHost(_headers);
 
   if (!host) {
     return { error: "Could not get host" };
