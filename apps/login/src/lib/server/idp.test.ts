@@ -13,11 +13,11 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("../service-url", () => ({
-  getServiceUrlFromHeaders: vi.fn(),
+  getServiceConfig: vi.fn(),
 }));
 
 vi.mock("./host", () => ({
-  getOriginalHost: vi.fn(),
+  getInstanceHost: vi.fn(),
 }));
 
 vi.mock("../zitadel", () => ({
@@ -35,22 +35,22 @@ describe("redirectToIdp", () => {
 
     // Import mocked modules
     const { headers } = await import("next/headers");
-    const { getServiceUrlFromHeaders } = await import("../service-url");
-    const { getOriginalHost } = await import("./host");
+    const { getServiceConfig } = await import("../service-url");
+    const { getInstanceHost } = await import("./host");
     const { startIdentityProviderFlow } = await import("../zitadel");
 
     // Setup mocks
     mockHeaders = vi.mocked(headers);
-    mockGetServiceUrlFromHeaders = vi.mocked(getServiceUrlFromHeaders);
-    mockGetOriginalHost = vi.mocked(getOriginalHost);
+    mockGetServiceUrlFromHeaders = vi.mocked(getServiceConfig);
+    mockGetOriginalHost = vi.mocked(getInstanceHost);
     mockStartIdentityProviderFlow = vi.mocked(startIdentityProviderFlow);
 
     // Default mock implementations
     mockHeaders.mockResolvedValue({} as any);
     mockGetServiceUrlFromHeaders.mockReturnValue({
-      serviceUrl: "https://api.example.com",
+      serviceConfig: { baseUrl: "https://api.example.com" },
     });
-    mockGetOriginalHost.mockResolvedValue("example.com");
+    mockGetOriginalHost.mockReturnValue("example.com");
   });
 
   afterEach(() => {
@@ -76,7 +76,7 @@ describe("redirectToIdp", () => {
       }
 
       expect(mockStartIdentityProviderFlow).toHaveBeenCalledWith({
-        serviceUrl: "https://api.example.com",
+        serviceConfig: { baseUrl: "https://api.example.com" },
         idpId: "idp123",
         urls: {
           successUrl: expect.stringContaining("postErrorRedirectUrl=https%3A%2F%2Fapp.example.com%2Ferror"),
@@ -115,7 +115,7 @@ describe("redirectToIdp", () => {
       }
 
       expect(mockStartIdentityProviderFlow).toHaveBeenCalledWith({
-        serviceUrl: "https://api.example.com",
+        serviceConfig: { baseUrl: "https://api.example.com" },
         idpId: "idp123",
         urls: {
           successUrl: expect.not.stringContaining("postErrorRedirectUrl"),
