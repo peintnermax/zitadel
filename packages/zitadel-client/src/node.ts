@@ -62,9 +62,18 @@ export async function verifyJwt<T = JWTPayload>(
   options?: {
     issuer?: string;
     audience?: string;
-  }
+    instanceHost?: string;
+    publicHost?: string;
+  },
 ): Promise<T & JWTPayload> {
-  const JWKS = createRemoteJWKSet(new URL(keysEndpoint));
+   const headers: Record<string, string> = {};
+   if (options?.instanceHost) {
+     headers["x-zitadel-instance-host"] = options.instanceHost;
+   }
+   if (options?.publicHost) {
+     headers["x-zitadel-public-host"] = options.publicHost;
+   }
+  const JWKS = createRemoteJWKSet(new URL(keysEndpoint), {headers: headers});
 
   const { payload } = await jwtVerify(token, JWKS, {
     issuer: options?.issuer,

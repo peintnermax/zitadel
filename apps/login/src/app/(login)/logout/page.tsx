@@ -2,9 +2,9 @@ import { DynamicTheme } from "@/components/dynamic-theme";
 import { SessionsClearList } from "@/components/sessions-clear-list";
 import { Translated } from "@/components/translated";
 import { getAllSessionCookieIds } from "@/lib/cookies";
-import { getPublicHostWithProtocol } from "@/lib/server/host";
+import { getInstanceHost, getPublicHost } from "@/lib/server/host";
 import { getServiceConfig } from "@/lib/service-url";
-import { getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig } from "@/lib/zitadel";
+import { getBrandingSettings, getDefaultOrg, listSessions, ServiceConfig} from "@/lib/zitadel";
 import { verifyJwt } from "@zitadel/client/node";
 import { Organization } from "@zitadel/proto/zitadel/org/v2/org_pb";
 import { Metadata } from "next";
@@ -38,14 +38,16 @@ export default async function Page(props: { searchParams: Promise<Record<string 
   const _headers = await headers();
   const { serviceConfig } = getServiceConfig(_headers);
 
-  const hostWithProtocol = await getPublicHostWithProtocol(_headers);
-
   let postLogoutRedirectUri;
   if (logoutToken) {
     try {
       const payload = await verifyJwt<{ post_logout_redirect_uri?: string }>(
         logoutToken,
-        `${hostWithProtocol}/oauth/v2/keys`,
+        `${serviceConfig.baseUrl}/oauth/v2/keys`,
+        {
+          instanceHost: getInstanceHost(_headers) || undefined,
+          publicHost: getPublicHost(_headers),
+        }
       );
       if (payload.post_logout_redirect_uri) {
         postLogoutRedirectUri = payload.post_logout_redirect_uri;
